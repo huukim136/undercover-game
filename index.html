@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Undercover Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-phase {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .phase-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .setup-section {
+            margin-bottom: 25px;
+        }
+
+        .setup-section h3 {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .player-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .player-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .player-card {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .player-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .player-card.eliminated {
+            opacity: 0.5;
+            background: #f8f8f8;
+            border-color: #ccc;
+        }
+
+        .player-card.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .player-name {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .player-role {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .word-display {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .voting-section {
+            margin: 30px 0;
+        }
+
+        .vote-counter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .winner-announcement {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 20px 0;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .instructions {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+        }
+
+        .word-pairs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .word-pair {
+            background: white;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .word-pair:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .word-pair.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .player-input-container {
+                flex-direction: column;
+            }
+            
+            input[type="text"], input[type="number"] {
+                min-width: unset;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕵️ Undercover</h1>
+        
+        <div id="gameContent">
+            <!-- Setup Phase -->
+            <div id="setupPhase">
+                <div class="game-phase">
+                    <div class="phase-title">Game Setup</div>
+                </div>
+
+                <div class="setup-section">
+                    <h3>Add Players</h3>
+                    <div class="player-input-container">
+                        <input type="text" id="playerNameInput" placeholder="Enter player name" maxlength="20">
+                        <button class="btn" onclick="addPlayer()">Add Player</button>
+                    </div>
+                    <div id="playersList"></div>
+                </div>
+
+                <div class="setup-section">
+                    <h3>Game Settings</h3>
+                    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <label>Undercover Count: <input type="number" id="undercoverCount" value="1" min="1" max="3" style="width: 60px;"></label>
+                        <label>Mr. White Count: <input type="number" id="mrWhiteCount" value="1" min="0" max="2" style="width: 60px;"></label>
+                    </div>
+                    <p style="margin-top: 15px; color: #666; font-style: italic;">A random word pair will be automatically selected when the game starts!</p>
+                </div>
+
+                <div id="loadingIndicator" style="display: none; text-align: center; margin: 20px 0;">
+                    <div style="color: #667eea; font-weight: bold;">🔄 Loading fresh word pairs...</div>
+                </div>
+
+                <button class="btn" onclick="startGame()" style="width: 100%; padding: 15px; font-size: 1.2em; margin-top: 20px;">Start Game</button>
+            </div>
+
+            <!-- Role Distribution Phase -->
+            <div id="rolePhase" style="display: none;">
+                <div class="game-phase">
+                    <div class="phase-title">Role Distribution</div>
+                    <p>Each player should check their role and word privately. Tap your name to reveal your role, then tap "Hide" to conceal it before passing to the next player!</p>
+                </div>
+                <div id="roleCards"></div>
+                <button class="btn" onclick="startDescriptions()" style="width: 100%; margin-top: 20px;">Everyone Ready? Start Descriptions</button>
+            </div>
+
+            <!-- Description Phase -->
+            <div id="descriptionPhase" style="display: none;">
+                <div class="game-phase">
+                    <div class="phase-title">Description Round</div>
+                    <p>Each player gives a brief, truthful description of their word. Take turns clockwise!</p>
+                </div>
+                <div class="instructions">
+                    <strong>Tips:</strong>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>Keep descriptions brief and honest</li>
+                        <li>Don't be too obvious if you're a Civilian</li>
+                        <li>Mr. White must improvise based on others' descriptions</li>
+                        <li>Listen carefully to spot differences</li>
+                    </ul>
+                </div>
+                <button class="btn" onclick="startVoting()" style="width: 100%; margin-top: 20px;">Done with Descriptions? Start Voting</button>
+            </div>
+
+            <!-- Voting Phase -->
+            <div id="votingPhase" style="display: none;">
+                <div class="game-phase">
+                    <div class="phase-title">Voting Time</div>
+                    <p>Discuss and vote to eliminate one player. Tap on a player to vote for them.</p>
+                </div>
+                <div id="votingCards" class="player-list"></div>
+                <div class="voting-section">
+                    <h3>Current Votes:</h3>
+                    <div id="voteCount"></div>
+                    <button class="btn btn-danger" onclick="eliminatePlayer()" style="width: 100%; margin-top: 15px;">Eliminate Selected Player</button>
+                </div>
+            </div>
+
+            <!-- Game Over Phase -->
+            <div id="gameOverPhase" style="display: none;">
+                <div id="winnerAnnouncement" class="winner-announcement"></div>
+                <div id="finalRoles"></div>
+                <button class="btn" onclick="resetGame()" style="width: 100%; margin-top: 20px; font-size: 1.2em;">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state
+        let gameState = {
+            players: [],
+            currentPhase: 'setup',
+            selectedWordPair: null,
+            undercoverCount: 1,
+            mrWhiteCount: 1,
+            votes: {},
+            eliminatedPlayers: [],
+            availableWordPairs: [],
+            usedWordPairs: []
+        };
+
+        // Base word pairs for offline use
+         const baseWordPairs = [
+            // Basic pairs
+            { civilian: "Coffee", undercover: "Tea" },
+            { civilian: "Lion", undercover: "Tiger" },
+            { civilian: "Pizza", undercover: "Burger" },
+            { civilian: "Car", undercover: "Motorcycle" },
+            { civilian: "Book", undercover: "Magazine" },
+            { civilian: "Ocean", undercover: "Lake" },
+            { civilian: "Guitar", undercover: "Piano" },
+            { civilian: "Apple", undercover: "Orange" },
+            { civilian: "Winter", undercover: "Summer" },
+            { civilian: "Doctor", undercover: "Nurse" },
+            { civilian: "Cat", undercover: "Dog" },
+            { civilian: "Mountain", undercover: "Hill" },
+            { civilian: "Phone", undercover: "Tablet" },
+            { civilian: "Rose", undercover: "Tulip" },
+            { civilian: "Basketball", undercover: "Football" },
+            { civilian: "Airplane", undercover: "Helicopter" },
+            { civilian: "Rain", undercover: "Snow" },
+            { civilian: "Sword", undercover: "Knife" },
+            { civilian: "Moon", undercover: "Sun" },
+            { civilian: "Spider", undercover: "Ant" },
+            { civilian: "Fire", undercover: "Ice" },
+            { civilian: "Hotel", undercover: "Motel" },
+            { civilian: "Boat", undercover: "Ship" },
+            { civilian: "Chicken", undercover: "Duck" },
+            { civilian: "Bread", undercover: "Toast" },
+            { civilian: "Glasses", undercover: "Sunglasses" },
+            { civilian: "Pen", undercover: "Pencil" },
+            { civilian: "Shirt", undercover: "T-shirt" },
+            { civilian: "Cake", undercover: "Pie" },
+            { civilian: "Tree", undercover: "Bush" },
+
+            // Extended pairs
+            { civilian: "Vampire", undercover: "Zombie" },
+            { civilian: "Ninja", undercover: "Samurai" },
+            { civilian: "Bicycle", undercover: "Scooter" },
+            { civilian: "Soup", undercover: "Stew" },
+            { civilian: "Butterfly", undercover: "Moth" },
+            { civilian: "Diamond", undercover: "Ruby" },
+            { civilian: "Wizard", undercover: "Witch" },
+            { civilian: "Elephant", undercover: "Rhinoceros" },
+            { civilian: "Sandwich", undercover: "Wrap" },
+            { civilian: "Thunder", undercover: "Lightning" },
+            { civilian: "Jacket", undercover: "Coat" },
+            { civilian: "Whale", undercover: "Dolphin" },
+            { civilian: "Cookies", undercover: "Biscuits" },
+            { civilian: "Lamp", undercover: "Flashlight" },
+            { civilian: "Stairs", undercover: "Escalator" },
+            { civilian: "Tent", undercover: "Cabin" },
+            { civilian: "Taxi", undercover: "Bus" },
+            { civilian: "Cactus", undercover: "Succulent" },
+            { civilian: "Hammer", undercover: "Screwdriver" },
+            { civilian: "Cheese", undercover: "Butter" },
+            { civilian: "Volcano", undercover: "Geyser" },
+            { civilian: "Pillow", undercover: "Cushion" },
+            { civilian: "Rocket", undercover: "Missile" },
+            { civilian: "Banana", undercover: "Plantain" },
+            { civilian: "Candle", undercover: "Torch" },
+            { civilian: "Owl", undercover: "Eagle" },
+            { civilian: "Magnet", undercover: "Compass" },
+            { civilian: "Fountain", undercover: "Waterfall" },
+            { civilian: "Garage", undercover: "Parking lot" },
+            { civilian: "Telescope", undercover: "Binoculars" },
+            { civilian: "Igloo", undercover: "Cave" },
+            { civilian: "Tornado", undercover: "Hurricane" },
+            { civilian: "Perfume", undercover: "Cologne" },
+            { civilian: "Ambulance", undercover: "Fire truck" },
+            { civilian: "Balcony", undercover: "Terrace" },
+            { civilian: "Crocodile", undercover: "Alligator" },
+            { civilian: "Spaghetti", undercover: "Noodles" },
+            { civilian: "Trumpet", undercover: "Saxophone" },
+            { civilian: "Curtains", undercover: "Blinds" },
+            { civilian: "Refrigerator", undercover: "Freezer" },
+
+            // Additional comprehensive pairs
+            { civilian: "River", undercover: "Stream" },
+            { civilian: "Castle", undercover: "Palace" },
+            { civilian: "Pirate", undercover: "Sailor" },
+            { civilian: "Forest", undercover: "Jungle" },
+            { civilian: "Rabbit", undercover: "Hare" },
+            { civilian: "Sword", undercover: "Saber" },
+            { civilian: "Cow", undercover: "Bull" },
+            { civilian: "Butterfly", undercover: "Dragonfly" },
+            { civilian: "Volcano", undercover: "Mountain" },
+            { civilian: "Shark", undercover: "Whale" },
+            { civilian: "Robot", undercover: "Android" },
+            { civilian: "Clown", undercover: "Jester" },
+            { civilian: "Treasure", undercover: "Gold" },
+            { civilian: "Fairy", undercover: "Angel" },
+            { civilian: "Knight", undercover: "Warrior" },
+            { civilian: "Princess", undercover: "Queen" },
+            { civilian: "Ghost", undercover: "Spirit" },
+            { civilian: "Dragon", undercover: "Monster" },
+            { civilian: "Unicorn", undercover: "Pegasus" },
+            { civilian: "Mermaid", undercover: "Siren" },
+
+            // Food & Drinks
+            { civilian: "Juice", undercover: "Smoothie" },
+            { civilian: "Soup", undercover: "Broth" },
+            { civilian: "Salad", undercover: "Vegetables" },
+            { civilian: "Pasta", undercover: "Noodles" },
+            { civilian: "Steak", undercover: "Meat" },
+            { civilian: "Ice cream", undercover: "Frozen yogurt" },
+            { civilian: "Pancake", undercover: "Waffle" },
+            { civilian: "Donut", undercover: "Bagel" },
+            { civilian: "Soda", undercover: "Juice" },
+            { civilian: "Wine", undercover: "Champagne" },
+            { civilian: "Chocolate", undercover: "Cocoa" },
+            { civilian: "Honey", undercover: "Syrup" },
+            { civilian: "Popcorn", undercover: "Chips" },
+            { civilian: "Cereal", undercover: "Oatmeal" },
+            { civilian: "Yogurt", undercover: "Pudding" },
+
+            // Animals
+            { civilian: "Horse", undercover: "Pony" },
+            { civilian: "Frog", undercover: "Toad" },
+            { civilian: "Snake", undercover: "Lizard" },
+            { civilian: "Bear", undercover: "Panda" },
+            { civilian: "Monkey", undercover: "Ape" },
+            { civilian: "Turtle", undercover: "Tortoise" },
+            { civilian: "Penguin", undercover: "Seal" },
+            { civilian: "Peacock", undercover: "Parrot" },
+            { civilian: "Bee", undercover: "Wasp" },
+            { civilian: "Ladybug", undercover: "Beetle" },
+            { civilian: "Octopus", undercover: "Squid" },
+            { civilian: "Flamingo", undercover: "Crane" },
+            { civilian: "Kangaroo", undercover: "Rabbit" },
+            { civilian: "Giraffe", undercover: "Deer" },
+            { civilian: "Zebra", undercover: "Horse" },
+
+            // Objects & Technology
+            { civilian: "Computer", undercover: "Laptop" },
+            { civilian: "Television", undercover: "Monitor" },
+            { civilian: "Camera", undercover: "Video camera" },
+            { civilian: "Microphone", undercover: "Speaker" },
+            { civilian: "Keyboard", undercover: "Piano" },
+            { civilian: "Mouse", undercover: "Trackpad" },
+            { civilian: "Headphones", undercover: "Earbuds" },
+            { civilian: "Charger", undercover: "Cable" },
+            { civilian: "Remote", undercover: "Controller" },
+            { civilian: "Watch", undercover: "Clock" },
+            { civilian: "Mirror", undercover: "Glass" },
+            { civilian: "Vacuum", undercover: "Broom" },
+            { civilian: "Toaster", undercover: "Oven" },
+            { civilian: "Blender", undercover: "Mixer" },
+            { civilian: "Microwave", undercover: "Oven" },
+
+            // Clothing & Accessories
+            { civilian: "Hat", undercover: "Cap" },
+            { civilian: "Scarf", undercover: "Shawl" },
+            { civilian: "Boots", undercover: "Shoes" },
+            { civilian: "Gloves", undercover: "Mittens" },
+            { civilian: "Belt", undercover: "Suspenders" },
+            { civilian: "Necklace", undercover: "Bracelet" },
+            { civilian: "Ring", undercover: "Earring" },
+            { civilian: "Purse", undercover: "Wallet" },
+            { civilian: "Backpack", undercover: "Suitcase" },
+            { civilian: "Umbrella", undercover: "Raincoat" },
+            { civilian: "Tie", undercover: "Bow tie" },
+            { civilian: "Dress", undercover: "Skirt" },
+            { civilian: "Sweater", undercover: "Cardigan" },
+            { civilian: "Jeans", undercover: "Pants" },
+            { civilian: "Sneakers", undercover: "Sandals" },
+
+            // Sports & Activities
+            { civilian: "Tennis", undercover: "Badminton" },
+            { civilian: "Soccer", undercover: "Rugby" },
+            { civilian: "Swimming", undercover: "Diving" },
+            { civilian: "Running", undercover: "Jogging" },
+            { civilian: "Cycling", undercover: "Motorcycling" },
+            { civilian: "Skiing", undercover: "Snowboarding" },
+            { civilian: "Surfing", undercover: "Wakeboarding" },
+            { civilian: "Boxing", undercover: "Wrestling" },
+            { civilian: "Chess", undercover: "Checkers" },
+            { civilian: "Poker", undercover: "Blackjack" },
+            { civilian: "Darts", undercover: "Archery" },
+            { civilian: "Bowling", undercover: "Pool" },
+            { civilian: "Golf", undercover: "Mini golf" },
+            { civilian: "Yoga", undercover: "Pilates" },
+            { civilian: "Dancing", undercover: "Ballet" },
+
+            // Places & Buildings
+            { civilian: "Library", undercover: "Bookstore" },
+            { civilian: "Hospital", undercover: "Clinic" },
+            { civilian: "School", undercover: "University" },
+            { civilian: "Mall", undercover: "Market" },
+            { civilian: "Theater", undercover: "Cinema" },
+            { civilian: "Museum", undercover: "Gallery" },
+            { civilian: "Park", undercover: "Garden" },
+            { civilian: "Beach", undercover: "Shore" },
+            { civilian: "Desert", undercover: "Wasteland" },
+            { civilian: "City", undercover: "Town" },
+            { civilian: "Village", undercover: "Hamlet" },
+            { civilian: "Island", undercover: "Peninsula" },
+            { civilian: "Bridge", undercover: "Tunnel" },
+            { civilian: "Tower", undercover: "Skyscraper" },
+            { civilian: "Stadium", undercover: "Arena" },
+
+            // Nature & Weather
+            { civilian: "Sunrise", undercover: "Sunset" },
+            { civilian: "Cloud", undercover: "Fog" },
+            { civilian: "Wind", undercover: "Breeze" },
+            { civilian: "Storm", undercover: "Tempest" },
+            { civilian: "Earthquake", undercover: "Tremor" },
+            { civilian: "Flood", undercover: "Tsunami" },
+            { civilian: "Drought", undercover: "Famine" },
+            { civilian: "Spring", undercover: "Autumn" },
+            { civilian: "Day", undercover: "Night" },
+            { civilian: "Dawn", undercover: "Dusk" },
+            { civilian: "Star", undercover: "Planet" },
+            { civilian: "Comet", undercover: "Meteor" },
+            { civilian: "Galaxy", undercover: "Universe" },
+            { civilian: "Asteroid", undercover: "Satellite" },
+            { civilian: "Eclipse", undercover: "Twilight" },
+
+            // Professions
+            { civilian: "Teacher", undercover: "Professor" },
+            { civilian: "Chef", undercover: "Cook" },
+            { civilian: "Pilot", undercover: "Captain" },
+            { civilian: "Lawyer", undercover: "Judge" },
+            { civilian: "Artist", undercover: "Painter" },
+            { civilian: "Musician", undercover: "Singer" },
+            { civilian: "Writer", undercover: "Journalist" },
+            { civilian: "Engineer", undercover: "Architect" },
+            { civilian: "Scientist", undercover: "Researcher" },
+            { civilian: "Farmer", undercover: "Gardener" },
+            { civilian: "Fisherman", undercover: "Sailor" },
+            { civilian: "Mechanic", undercover: "Technician" },
+            { civilian: "Barber", undercover: "Hairdresser" },
+            { civilian: "Waiter", undercover: "Bartender" },
+            { civilian: "Cashier", undercover: "Clerk" },
+
+            // Transportation
+            { civilian: "Train", undercover: "Subway" },
+            { civilian: "Truck", undercover: "Van" },
+            { civilian: "Scooter", undercover: "Moped" },
+            { civilian: "Jet", undercover: "Plane" },
+            { civilian: "Yacht", undercover: "Boat" },
+            { civilian: "Canoe", undercover: "Kayak" },
+            { civilian: "Skateboard", undercover: "Scooter" },
+            { civilian: "Roller skates", undercover: "Ice skates" },
+            { civilian: "Segway", undercover: "Hoverboard" },
+            { civilian: "Trolley", undercover: "Tram" },
+            { civilian: "Cable car", undercover: "Gondola" },
+            { civilian: "Rickshaw", undercover: "Cart" },
+            { civilian: "Limousine", undercover: "Sedan" },
+            { civilian: "Convertible", undercover: "Coupe" },
+            { civilian: "Wagon", undercover: "Carriage" },
+
+            // Hobbies & Entertainment
+            { civilian: "Painting", undercover: "Drawing" },
+            { civilian: "Singing", undercover: "Humming" },
+            { civilian: "Reading", undercover: "Writing" },
+            { civilian: "Gardening", undercover: "Farming" },
+            { civilian: "Cooking", undercover: "Baking" },
+            { civilian: "Photography", undercover: "Filming" },
+            { civilian: "Collecting", undercover: "Hoarding" },
+            { civilian: "Puzzle", undercover: "Riddle" },
+            { civilian: "Magic trick", undercover: "Illusion" },
+            { civilian: "Karaoke", undercover: "Concert" },
+            { civilian: "Board game", undercover: "Card game" },
+            { civilian: "Video game", undercover: "Computer game" },
+            { civilian: "Crossword", undercover: "Sudoku" },
+            { civilian: "Origami", undercover: "Paper craft" },
+            { civilian: "Knitting", undercover: "Sewing" },
+
+            // Emotions & Concepts
+            { civilian: "Happy", undercover: "Joyful" },
+            { civilian: "Sad", undercover: "Melancholy" },
+            { civilian: "Angry", undercover: "Furious" },
+            { civilian: "Scared", undercover: "Terrified" },
+            { civilian: "Excited", undercover: "Thrilled" },
+            { civilian: "Tired", undercover: "Exhausted" },
+            { civilian: "Confused", undercover: "Puzzled" },
+            { civilian: "Proud", undercover: "Arrogant" },
+            { civilian: "Jealous", undercover: "Envious" },
+            { civilian: "Curious", undercover: "Nosy" },
+            { civilian: "Brave", undercover: "Courageous" },
+            { civilian: "Lazy", undercover: "Sluggish" },
+            { civilian: "Smart", undercover: "Intelligent" },
+            { civilian: "Funny", undercover: "Hilarious" },
+            { civilian: "Kind", undercover: "Generous" },
+
+            // Mythical & Fantasy
+            { civilian: "Centaur", undercover: "Minotaur" },
+            { civilian: "Phoenix", undercover: "Griffin" },
+            { civilian: "Elf", undercover: "Fairy" },
+            { civilian: "Dwarf", undercover: "Gnome" },
+            { civilian: "Goblin", undercover: "Troll" },
+            { civilian: "Orc", undercover: "Ogre" },
+            { civilian: "Mage", undercover: "Sorcerer" },
+            { civilian: "Paladin", undercover: "Crusader" },
+            { civilian: "Rogue", undercover: "Thief" },
+            { civilian: "Archer", undercover: "Ranger" },
+            { civilian: "Barbarian", undercover: "Viking" },
+            { civilian: "Monk", undercover: "Priest" },
+            { civilian: "Necromancer", undercover: "Warlock" },
+            { civilian: "Druid", undercover: "Shaman" },
+            { civilian: "Bard", undercover: "Minstrel" }
+        ];
+
+        // Extended word pairs for variety
+        const extendedWordPairs = [
+            { civilian: "Vampire", undercover: "Zombie" },
+            { civilian: "Ninja", undercover: "Samurai" },
+            { civilian: "Bicycle", undercover: "Scooter" },
+            { civilian: "Soup", undercover: "Stew" },
+            { civilian: "Butterfly", undercover: "Moth" },
+            { civilian: "Diamond", undercover: "Ruby" },
+            { civilian: "Wizard", undercover: "Witch" },
+            { civilian: "Elephant", undercover: "Rhinoceros" },
+            { civilian: "Sandwich", undercover: "Wrap" },
+            { civilian: "Thunder", undercover: "Lightning" },
+            { civilian: "Jacket", undercover: "Coat" },
+            { civilian: "Whale", undercover: "Dolphin" },
+            { civilian: "Cookies", undercover: "Biscuits" },
+            { civilian: "Lamp", undercover: "Flashlight" },
+            { civilian: "Stairs", undercover: "Escalator" },
+            { civilian: "Tent", undercover: "Cabin" },
+            { civilian: "Taxi", undercover: "Bus" },
+            { civilian: "Cactus", undercover: "Succulent" },
+            { civilian: "Hammer", undercover: "Screwdriver" },
+            { civilian: "Cheese", undercover: "Butter" },
+            { civilian: "Volcano", undercover: "Geyser" },
+            { civilian: "Pillow", undercover: "Cushion" },
+            { civilian: "Rocket", undercover: "Missile" },
+            { civilian: "Banana", undercover: "Plantain" },
+            { civilian: "Candle", undercover: "Torch" },
+            { civilian: "Owl", undercover: "Eagle" },
+            { civilian: "Magnet", undercover: "Compass" },
+            { civilian: "Fountain", undercover: "Waterfall" },
+            { civilian: "Garage", undercover: "Parking lot" },
+            { civilian: "Telescope", undercover: "Binoculars" },
+            { civilian: "Igloo", undercover: "Cave" },
+            { civilian: "Tornado", undercover: "Hurricane" },
+            { civilian: "Perfume", undercover: "Cologne" },
+            { civilian: "Ambulance", undercover: "Fire truck" },
+            { civilian: "Balcony", undercover: "Terrace" },
+            { civilian: "Crocodile", undercover: "Alligator" },
+            { civilian: "Spaghetti", undercover: "Noodles" },
+            { civilian: "Trumpet", undercover: "Saxophone" },
+            { civilian: "Curtains", undercover: "Blinds" },
+            { civilian: "Refrigerator", undercover: "Freezer" }
+        ];
+
+        // Initialize word pairs
+        function initializeWordPairs() {
+            gameState.availableWordPairs = [...baseWordPairs, ...extendedWordPairs];
+            shuffleArray(gameState.availableWordPairs);
+        }
+
+        // Shuffle array utility
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Get a random word pair
+        function getRandomWordPair() {
+            // If we're running low on word pairs, refresh the pool
+            if (gameState.availableWordPairs.length < 5) {
+                // Add back some used pairs and shuffle
+                const recycledPairs = gameState.usedWordPairs.splice(0, Math.min(20, gameState.usedWordPairs.length));
+                gameState.availableWordPairs.push(...recycledPairs);
+                shuffleArray(gameState.availableWordPairs);
+            }
+            
+            // Select a random pair
+            const randomIndex = Math.floor(Math.random() * gameState.availableWordPairs.length);
+            const selectedPair = gameState.availableWordPairs.splice(randomIndex, 1)[0];
+            
+            // Move to used pairs
+            gameState.usedWordPairs.push(selectedPair);
+            
+            return selectedPair;
+        }
+
+        function addPlayer() {
+            const input = document.getElementById('playerNameInput');
+            const name = input.value.trim();
+            
+            if (name && !gameState.players.find(p => p.name === name)) {
+                gameState.players.push({
+                    name: name,
+                    role: null,
+                    word: null,
+                    eliminated: false
+                });
+                input.value = '';
+                updatePlayersDisplay();
+            }
+        }
+
+        function removePlayer(index) {
+            gameState.players.splice(index, 1);
+            updatePlayersDisplay();
+        }
+
+        function updatePlayersDisplay() {
+            const container = document.getElementById('playersList');
+            container.innerHTML = '';
+            
+            gameState.players.forEach((player, index) => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; border-radius: 8px; margin: 5px 0;">
+                        <span>${player.name}</span>
+                        <button class="btn btn-danger" onclick="removePlayer(${index})" style="padding: 5px 10px; font-size: 12px;">Remove</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function startGame() {
+            if (gameState.players.length < 3) {
+                alert('You need at least 3 players to start the game!');
+                return;
+            }
+
+            const undercoverCount = parseInt(document.getElementById('undercoverCount').value);
+            const mrWhiteCount = parseInt(document.getElementById('mrWhiteCount').value);
+            
+            if (undercoverCount + mrWhiteCount >= gameState.players.length) {
+                alert('Too many undercover/Mr. White players for the number of total players!');
+                return;
+            }
+
+            // Show loading indicator
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            // Simulate brief loading for better UX
+            setTimeout(() => {
+                gameState.undercoverCount = undercoverCount;
+                gameState.mrWhiteCount = mrWhiteCount;
+                
+                // Automatically select a random word pair
+                gameState.selectedWordPair = getRandomWordPair();
+                
+                assignRoles();
+                showRolePhase();
+                
+                document.getElementById('loadingIndicator').style.display = 'none';
+            }, 800);
+        }
+
+        function assignRoles() {
+            const players = [...gameState.players];
+            const totalSpecial = gameState.undercoverCount + gameState.mrWhiteCount;
+            
+            // Shuffle players
+            for (let i = players.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [players[i], players[j]] = [players[j], players[i]];
+            }
+            
+            // Assign roles
+            for (let i = 0; i < gameState.undercoverCount; i++) {
+                players[i].role = 'Undercover';
+                players[i].word = gameState.selectedWordPair.undercover;
+            }
+            
+            for (let i = gameState.undercoverCount; i < totalSpecial; i++) {
+                players[i].role = 'Mr. White';
+                players[i].word = '???';
+            }
+            
+            for (let i = totalSpecial; i < players.length; i++) {
+                players[i].role = 'Civilian';
+                players[i].word = gameState.selectedWordPair.civilian;
+            }
+        }
+
+        function showRolePhase() {
+            document.getElementById('setupPhase').style.display = 'none';
+            document.getElementById('rolePhase').style.display = 'block';
+            
+            const container = document.getElementById('roleCards');
+            container.innerHTML = '';
+            
+            gameState.players.forEach((player, index) => {
+                const div = document.createElement('div');
+                div.className = 'player-card';
+                div.innerHTML = `
+                    <div class="player-name">${player.name}</div>
+                    <div class="player-role" id="role-${index}" style="display: none;">
+                        <strong>Role:</strong> ${player.role}<br>
+                        <strong>Word:</strong> ${player.word}<br>
+                        <button class="btn" onclick="hideRole(${index})" style="margin-top: 10px; padding: 8px 15px; font-size: 14px;">Hide & Pass Phone</button>
+                    </div>
+                    <div id="tap-${index}">Tap to reveal</div>
+                `;
+                div.onclick = (e) => {
+                    if (e.target.tagName !== 'BUTTON') {
+                        revealRole(index);
+                    }
+                };
+                container.appendChild(div);
+            });
+        }
+
+        function revealRole(index) {
+            // Hide all other roles first
+            gameState.players.forEach((_, i) => {
+                if (i !== index) {
+                    document.getElementById(`role-${i}`).style.display = 'none';
+                    document.getElementById(`tap-${i}`).style.display = 'block';
+                }
+            });
+            
+            // Show current role
+            document.getElementById(`role-${index}`).style.display = 'block';
+            document.getElementById(`tap-${index}`).style.display = 'none';
+        }
+
+        function hideRole(index) {
+            document.getElementById(`role-${index}`).style.display = 'none';
+            document.getElementById(`tap-${index}`).style.display = 'block';
+        }
+
+        function startDescriptions() {
+            document.getElementById('rolePhase').style.display = 'none';
+            document.getElementById('descriptionPhase').style.display = 'block';
+        }
+
+        function startVoting() {
+            document.getElementById('descriptionPhase').style.display = 'none';
+            document.getElementById('votingPhase').style.display = 'block';
+            
+            gameState.votes = {};
+            updateVotingDisplay();
+        }
+
+        function updateVotingDisplay() {
+            const container = document.getElementById('votingCards');
+            container.innerHTML = '';
+            
+            gameState.players.filter(p => !p.eliminated).forEach((player, index) => {
+                const div = document.createElement('div');
+                div.className = 'player-card';
+                div.innerHTML = `
+                    <div class="player-name">${player.name}</div>
+                    <div class="player-role">Votes: ${gameState.votes[player.name] || 0}</div>
+                `;
+                div.onclick = () => voteForPlayer(player.name);
+                container.appendChild(div);
+            });
+            
+            updateVoteCount();
+        }
+
+        function voteForPlayer(playerName) {
+            gameState.votes[playerName] = (gameState.votes[playerName] || 0) + 1;
+            updateVotingDisplay();
+        }
+
+        function updateVoteCount() {
+            const container = document.getElementById('voteCount');
+            container.innerHTML = '';
+            
+            Object.entries(gameState.votes).forEach(([name, votes]) => {
+                if (votes > 0) {
+                    const div = document.createElement('div');
+                    div.className = 'vote-counter';
+                    div.innerHTML = `<span>${name}</span><span>${votes} votes</span>`;
+                    container.appendChild(div);
+                }
+            });
+        }
+
+        function eliminatePlayer() {
+            const maxVotes = Math.max(...Object.values(gameState.votes));
+            const eliminated = Object.entries(gameState.votes).find(([name, votes]) => votes === maxVotes);
+            
+            if (!eliminated) {
+                alert('No votes cast yet!');
+                return;
+            }
+            
+            const eliminatedPlayer = gameState.players.find(p => p.name === eliminated[0]);
+            eliminatedPlayer.eliminated = true;
+            gameState.eliminatedPlayers.push(eliminatedPlayer);
+            
+            checkWinConditions();
+        }
+
+        function checkWinConditions() {
+            const alivePlayers = gameState.players.filter(p => !p.eliminated);
+            const aliveCivilians = alivePlayers.filter(p => p.role === 'Civilian').length;
+            const aliveUndercover = alivePlayers.filter(p => p.role === 'Undercover').length;
+            const aliveMrWhite = alivePlayers.filter(p => p.role === 'Mr. White').length;
+            
+            let winner = null;
+            
+            // Check if all undercover and Mr. White are eliminated
+            if (aliveUndercover === 0 && aliveMrWhite === 0) {
+                winner = 'Civilians';
+            }
+            // Check if undercover/Mr. White outnumber or equal civilians
+            else if (aliveUndercover + aliveMrWhite >= aliveCivilians) {
+                winner = 'Undercover & Mr. White';
+            }
+            
+            if (winner) {
+                endGame(winner);
+            } else {
+                // Continue game - start new voting round
+                gameState.votes = {};
+                updateVotingDisplay();
+            }
+        }
+
+        function endGame(winner) {
+            document.getElementById('votingPhase').style.display = 'none';
+            document.getElementById('gameOverPhase').style.display = 'block';
+            
+            document.getElementById('winnerAnnouncement').innerHTML = `🎉 ${winner} Win! 🎉`;
+            
+            const finalRoles = document.getElementById('finalRoles');
+            finalRoles.innerHTML = '<h3>Final Roles:</h3>';
+            
+            gameState.players.forEach(player => {
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <div style="padding: 10px; margin: 5px 0; background: ${player.eliminated ? '#ffebee' : '#e8f5e8'}; border-radius: 8px;">
+                        <strong>${player.name}</strong> - ${player.role} (${player.word}) ${player.eliminated ? '- ELIMINATED' : ''}
+                    </div>
+                `;
+                finalRoles.appendChild(div);
+            });
+        }
+
+        function resetGame() {
+            // Keep the word pair pools but reset game state
+            const availablePairs = gameState.availableWordPairs;
+            const usedPairs = gameState.usedWordPairs;
+            
+            gameState = {
+                players: [],
+                currentPhase: 'setup',
+                selectedWordPair: null,
+                undercoverCount: 1,
+                mrWhiteCount: 1,
+                votes: {},
+                eliminatedPlayers: [],
+                availableWordPairs: availablePairs,
+                usedWordPairs: usedPairs
+            };
+            
+            // Hide all phases except setup
+            document.getElementById('setupPhase').style.display = 'block';
+            document.getElementById('rolePhase').style.display = 'none';
+            document.getElementById('descriptionPhase').style.display = 'none';
+            document.getElementById('votingPhase').style.display = 'none';
+            document.getElementById('gameOverPhase').style.display = 'none';
+            
+            // Clear displays
+            document.getElementById('playersList').innerHTML = '';
+        }
+
+        // Initialize the game
+        initializeWordPairs();
+
+        // Allow adding players with Enter key
+        document.getElementById('playerNameInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addPlayer();
+            }
+        });
+    </script>
+</body>
+</html>
