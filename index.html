@@ -113,6 +113,14 @@
             box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
         }
 
+        .btn-success {
+            background: linear-gradient(45deg, #51cf66, #40c057);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 5px 15px rgba(81, 207, 102, 0.4);
+        }
+
         .player-list {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -196,6 +204,27 @@
             animation: pulse 2s infinite;
         }
 
+        .mr-white-guess {
+            background: linear-gradient(45deg, #ff9800, #f57c00);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .guess-input {
+            margin: 15px 0;
+        }
+
+        .guess-input input {
+            margin-right: 10px;
+            padding: 10px;
+            border: 2px solid white;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -208,34 +237,6 @@
             border-radius: 15px;
             margin: 20px 0;
             border-left: 5px solid #667eea;
-        }
-
-        .word-pairs {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-        }
-
-        .word-pair {
-            background: white;
-            border: 2px solid #eee;
-            border-radius: 10px;
-            padding: 15px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .word-pair:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-        }
-
-        .word-pair.selected {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
         }
 
         @media (max-width: 768px) {
@@ -297,8 +298,8 @@
             <!-- Role Distribution Phase -->
             <div id="rolePhase" style="display: none;">
                 <div class="game-phase">
-                    <div class="phase-title">Role Distribution</div>
-                    <p>Each player should check their role and word privately. Tap your name to reveal your role, then tap "Hide" to conceal it before passing to the next player!</p>
+                    <div class="phase-title">Word Distribution</div>
+                    <p>Each player should check their word privately. You do NOT know your role - only your word! Tap your name to reveal your word, then tap "Hide" to conceal it before passing to the next player!</p>
                 </div>
                 <div id="roleCards"></div>
                 <button class="btn" onclick="startDescriptions()" style="width: 100%; margin-top: 20px;">Everyone Ready? Start Descriptions</button>
@@ -314,9 +315,10 @@
                     <strong>Tips:</strong>
                     <ul style="margin-left: 20px; margin-top: 10px;">
                         <li>Keep descriptions brief and honest</li>
-                        <li>Don't be too obvious if you're a Civilian</li>
+                        <li>Don't be too obvious - stay vague enough</li>
                         <li>Mr. White must improvise based on others' descriptions</li>
                         <li>Listen carefully to spot differences</li>
+                        <li>Remember: You don't know if you're Civilian or Undercover!</li>
                     </ul>
                 </div>
                 <button class="btn" onclick="startVoting()" style="width: 100%; margin-top: 20px;">Done with Descriptions? Start Voting</button>
@@ -333,6 +335,20 @@
                     <h3>Current Votes:</h3>
                     <div id="voteCount"></div>
                     <button class="btn btn-danger" onclick="eliminatePlayer()" style="width: 100%; margin-top: 15px;">Eliminate Selected Player</button>
+                </div>
+            </div>
+
+            <!-- Mr. White Guess Phase -->
+            <div id="mrWhiteGuessPhase" style="display: none;">
+                <div class="mr-white-guess">
+                    <h2>🎯 Mr. White's Last Chance!</h2>
+                    <p id="eliminatedMrWhiteName"></p>
+                    <p>You have been eliminated! But you can still win by guessing the Civilian's word.</p>
+                    <div class="guess-input">
+                        <input type="text" id="mrWhiteGuessInput" placeholder="Enter your guess for the Civilian's word" style="width: 60%; margin-right: 10px;">
+                        <button class="btn btn-success" onclick="checkMrWhiteGuess()">Submit Guess</button>
+                    </div>
+                    <button class="btn" onclick="skipMrWhiteGuess()" style="margin-top: 10px;">Skip Guess</button>
                 </div>
             </div>
 
@@ -356,11 +372,12 @@
             votes: {},
             eliminatedPlayers: [],
             availableWordPairs: [],
-            usedWordPairs: []
+            usedWordPairs: [],
+            eliminatedMrWhite: null
         };
 
         // Base word pairs for offline use
-         const baseWordPairs = [
+        const baseWordPairs = [
             // Basic pairs
             { civilian: "Coffee", undercover: "Tea" },
             { civilian: "Lion", undercover: "Tiger" },
@@ -722,19 +739,14 @@
 
         // Get a random word pair
         function getRandomWordPair() {
-            // If we're running low on word pairs, refresh the pool
             if (gameState.availableWordPairs.length < 5) {
-                // Add back some used pairs and shuffle
                 const recycledPairs = gameState.usedWordPairs.splice(0, Math.min(20, gameState.usedWordPairs.length));
                 gameState.availableWordPairs.push(...recycledPairs);
                 shuffleArray(gameState.availableWordPairs);
             }
             
-            // Select a random pair
             const randomIndex = Math.floor(Math.random() * gameState.availableWordPairs.length);
             const selectedPair = gameState.availableWordPairs.splice(randomIndex, 1)[0];
-            
-            // Move to used pairs
             gameState.usedWordPairs.push(selectedPair);
             
             return selectedPair;
@@ -791,15 +803,11 @@
                 return;
             }
 
-            // Show loading indicator
             document.getElementById('loadingIndicator').style.display = 'block';
             
-            // Simulate brief loading for better UX
             setTimeout(() => {
                 gameState.undercoverCount = undercoverCount;
                 gameState.mrWhiteCount = mrWhiteCount;
-                
-                // Automatically select a random word pair
                 gameState.selectedWordPair = getRandomWordPair();
                 
                 assignRoles();
@@ -811,26 +819,23 @@
 
         function assignRoles() {
             const players = [...gameState.players];
-            const totalSpecial = gameState.undercoverCount + gameState.mrWhiteCount;
+            shuffleArray(players);
             
-            // Shuffle players
-            for (let i = players.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [players[i], players[j]] = [players[j], players[i]];
-            }
+            let roleIndex = 0;
             
-            // Assign roles
             for (let i = 0; i < gameState.undercoverCount; i++) {
-                players[i].role = 'Undercover';
-                players[i].word = gameState.selectedWordPair.undercover;
+                players[roleIndex].role = 'Undercover';
+                players[roleIndex].word = gameState.selectedWordPair.undercover;
+                roleIndex++;
             }
             
-            for (let i = gameState.undercoverCount; i < totalSpecial; i++) {
-                players[i].role = 'Mr. White';
-                players[i].word = '???';
+            for (let i = 0; i < gameState.mrWhiteCount; i++) {
+                players[roleIndex].role = 'Mr. White';
+                players[roleIndex].word = '???';
+                roleIndex++;
             }
             
-            for (let i = totalSpecial; i < players.length; i++) {
+            for (let i = roleIndex; i < players.length; i++) {
                 players[i].role = 'Civilian';
                 players[i].word = gameState.selectedWordPair.civilian;
             }
@@ -849,11 +854,11 @@
                 div.innerHTML = `
                     <div class="player-name">${player.name}</div>
                     <div class="player-role" id="role-${index}" style="display: none;">
-                        <strong>Role:</strong> ${player.role}<br>
-                        <strong>Word:</strong> ${player.word}<br>
+                        <strong>Your Word:</strong> ${player.word}<br>
+                        ${player.role === 'Mr. White' ? '<em style="color: #ff6b6b;">You are Mr. White - you have no word! Listen and improvise!</em><br>' : ''}
                         <button class="btn" onclick="hideRole(${index})" style="margin-top: 10px; padding: 8px 15px; font-size: 14px;">Hide & Pass Phone</button>
                     </div>
-                    <div id="tap-${index}">Tap to reveal</div>
+                    <div id="tap-${index}">Tap to reveal your word</div>
                 `;
                 div.onclick = (e) => {
                     if (e.target.tagName !== 'BUTTON') {
@@ -865,7 +870,6 @@
         }
 
         function revealRole(index) {
-            // Hide all other roles first
             gameState.players.forEach((_, i) => {
                 if (i !== index) {
                     document.getElementById(`role-${i}`).style.display = 'none';
@@ -873,7 +877,6 @@
                 }
             });
             
-            // Show current role
             document.getElementById(`role-${index}`).style.display = 'block';
             document.getElementById(`tap-${index}`).style.display = 'none';
         }
@@ -946,7 +949,44 @@
             eliminatedPlayer.eliminated = true;
             gameState.eliminatedPlayers.push(eliminatedPlayer);
             
-            checkWinConditions();
+            revealEliminatedRole(eliminatedPlayer);
+        }
+
+        function revealEliminatedRole(player) {
+            document.getElementById('votingCards').style.display = 'none';
+            document.getElementById('voteCount').style.display = 'none';
+            
+            const announcement = document.createElement('div');
+            announcement.className = 'winner-announcement';
+            announcement.style.background = 'linear-gradient(45deg, #ff6b6b, #ee5a52)';
+            announcement.innerHTML = `
+                <h3>${player.name} has been eliminated!</h3>
+                <p>They were: ${player.role}</p>
+            `;
+            
+            document.getElementById('votingPhase').appendChild(announcement);
+            
+            setTimeout(() => {
+                document.getElementById('votingPhase').removeChild(announcement);
+                document.getElementById('votingCards').style.display = '';
+                document.getElementById('voteCount').style.display = '';
+                
+                if (player.role === 'Mr. White') {
+                    gameState.eliminatedMrWhite = player;
+                    showMrWhiteGuessPhase();
+                } else {
+                    checkWinConditions();
+                }
+            }, 3000);
+        }
+
+        function showMrWhiteGuessPhase() {
+            document.getElementById('votingPhase').style.display = 'none';
+            document.getElementById('mrWhiteGuessPhase').style.display = 'block';
+            document.getElementById('eliminatedMrWhiteName').textContent = 
+                `${gameState.eliminatedMrWhite.name}, this is your chance!`;
+            document.getElementById('mrWhiteGuessInput').value = '';
+            document.getElementById('mrWhiteGuessInput').focus();
         }
 
         function checkWinConditions() {
@@ -956,39 +996,62 @@
             const aliveMrWhite = alivePlayers.filter(p => p.role === 'Mr. White').length;
             
             let winner = null;
+            let winMessage = '';
             
-            // Check if all undercover and Mr. White are eliminated
+            // Check win conditions
             if (aliveUndercover === 0 && aliveMrWhite === 0) {
                 winner = 'Civilians';
-            }
-            // Check if undercover/Mr. White outnumber or equal civilians
-            else if (aliveUndercover + aliveMrWhite >= aliveCivilians) {
-                winner = 'Undercover & Mr. White';
+                winMessage = 'All impostors have been eliminated!';
+            } else if (aliveUndercover >= aliveCivilians) {
+                winner = 'Undercover';
+                winMessage = 'The Undercover players have matched the number of Civilians!';
             }
             
             if (winner) {
-                endGame(winner);
+                endGame(winner, winMessage);
             } else {
-                // Continue game - start new voting round
+                document.getElementById('votingPhase').style.display = 'block';
+                document.getElementById('mrWhiteGuessPhase').style.display = 'none';
                 gameState.votes = {};
                 updateVotingDisplay();
             }
         }
 
-        function endGame(winner) {
+        function checkMrWhiteGuess() {
+            const guess = document.getElementById('mrWhiteGuessInput').value.trim().toLowerCase();
+            const civilianWord = gameState.selectedWordPair.civilian.toLowerCase();
+            
+            if (guess === civilianWord) {
+                endGame('Mr. White', `${gameState.eliminatedMrWhite.name} correctly guessed "${gameState.selectedWordPair.civilian}"!`);
+            } else {
+                document.getElementById('mrWhiteGuessPhase').style.display = 'none';
+                document.getElementById('votingPhase').style.display = 'block';
+                checkWinConditions();
+            }
+        }
+
+        function skipMrWhiteGuess() {
+            checkWinConditions();
+        }
+
+        function endGame(winner, message = '') {
             document.getElementById('votingPhase').style.display = 'none';
+            document.getElementById('mrWhiteGuessPhase').style.display = 'none';
             document.getElementById('gameOverPhase').style.display = 'block';
             
-            document.getElementById('winnerAnnouncement').innerHTML = `🎉 ${winner} Win! 🎉`;
+            document.getElementById('winnerAnnouncement').innerHTML = `🎉 ${winner} Win! 🎉<br><small>${message}</small>`;
             
+            // Now reveal all roles and words at game end
             const finalRoles = document.getElementById('finalRoles');
-            finalRoles.innerHTML = '<h3>Final Roles:</h3>';
+            finalRoles.innerHTML = '<h3>Final Roles and Words:</h3>';
             
             gameState.players.forEach(player => {
                 const div = document.createElement('div');
                 div.innerHTML = `
                     <div style="padding: 10px; margin: 5px 0; background: ${player.eliminated ? '#ffebee' : '#e8f5e8'}; border-radius: 8px;">
-                        <strong>${player.name}</strong> - ${player.role} (${player.word}) ${player.eliminated ? '- ELIMINATED' : ''}
+                        <strong>${player.name}</strong> - ${player.role} 
+                        (Word: ${player.role === 'Mr. White' ? 'No Word' : player.word}) 
+                        ${player.eliminated ? '- ELIMINATED' : ''}
                     </div>
                 `;
                 finalRoles.appendChild(div);
@@ -996,7 +1059,6 @@
         }
 
         function resetGame() {
-            // Keep the word pair pools but reset game state
             const availablePairs = gameState.availableWordPairs;
             const usedPairs = gameState.usedWordPairs;
             
@@ -1009,29 +1071,41 @@
                 votes: {},
                 eliminatedPlayers: [],
                 availableWordPairs: availablePairs,
-                usedWordPairs: usedPairs
+                usedWordPairs: usedPairs,
+                eliminatedMrWhite: null
             };
             
-            // Hide all phases except setup
             document.getElementById('setupPhase').style.display = 'block';
             document.getElementById('rolePhase').style.display = 'none';
             document.getElementById('descriptionPhase').style.display = 'none';
             document.getElementById('votingPhase').style.display = 'none';
+            document.getElementById('mrWhiteGuessPhase').style.display = 'none';
             document.getElementById('gameOverPhase').style.display = 'none';
-            
-            // Clear displays
-            document.getElementById('playersList').innerHTML = '';
+
+            updatePlayersDisplay();
+
+            document.getElementById('playerNameInput').value = '';
+            document.getElementById('undercoverCount').value = 1;
+            document.getElementById('mrWhiteCount').value = 1;
+
+            const roleCards = document.getElementById('roleCards');
+            if (roleCards) roleCards.innerHTML = '';
+            const votingCards = document.getElementById('votingCards');
+            if (votingCards) votingCards.innerHTML = '';
+            const voteCount = document.getElementById('voteCount');
+            if (voteCount) voteCount.innerHTML = '';
+            const finalRoles = document.getElementById('finalRoles');
+            if (finalRoles) finalRoles.innerHTML = '';
+            const winnerAnnouncement = document.getElementById('winnerAnnouncement');
+            if (winnerAnnouncement) winnerAnnouncement.innerHTML = '';
+            const mrWhiteGuessInput = document.getElementById('mrWhiteGuessInput');
+            if (mrWhiteGuessInput) mrWhiteGuessInput.value = '';
+            const eliminatedMrWhiteName = document.getElementById('eliminatedMrWhiteName');
+            if (eliminatedMrWhiteName) eliminatedMrWhiteName.textContent = '';
         }
 
-        // Initialize the game
         initializeWordPairs();
-
-        // Allow adding players with Enter key
-        document.getElementById('playerNameInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addPlayer();
-            }
-        });
+        updatePlayersDisplay();
     </script>
 </body>
 </html>
