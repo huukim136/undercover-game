@@ -28,7 +28,9 @@ Shoutout to Claude for doing the heavy lifting—about 99% of the code was writt
 4. **Elimination**:
    - Players vote to eliminate one person
    - The app reveals the eliminated player's role
+   - If Mr. White is eliminated, Mr. White has the last chance to guess the word of civilians
 
 5. **Winning Conditions**:
-   - **Civilians**: Win by correctly identifying and eliminating all Undercover players
-   - **Undercover/Mr. White**: Win by either not being identified and eliminated or by correctly guessing the Civilian's word
+   - **Civilians**: Win by correctly identifying and eliminating Undercover and Mr.White 
+   - **Undercover**: Win by either not being identified and eliminated until the end of the game
+   - - **Undercover/Mr. White**: Win by either not being identified and eliminated until the end of the game or by correctly guessing the Civilian's word
