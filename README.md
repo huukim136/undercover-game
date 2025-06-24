@@ -33,4 +33,4 @@ Shoutout to Claude for doing the heavy lifting—about 99% of the code was writt
 5. **Winning Conditions**:
    - **Civilians**: Win by correctly identifying and eliminating Undercover and Mr.White 
    - **Undercover**: Win by either not being identified and eliminated until the end of the game
-   - - **Undercover/Mr. White**: Win by either not being identified and eliminated until the end of the game or by correctly guessing the Civilian's word
+   - **Mr. White**: Win by either not being identified and eliminated until the end of the game or by correctly guessing the Civilian's word
